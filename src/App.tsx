@@ -28,10 +28,15 @@ import Aboutus from "./pages/About";
 import { ServiceView } from "./screens/DesktopScreen/sections/ServiceOverviewSection";
 import { EnquiryForm } from "./pages";
 import { ServicesPage } from "./pages/ServicesPage";
+import { WhatsAppButton } from "./components/WhatsAppButton";
+import { AIWidgetButton } from "./components/AIWidgetButton";
 
 export function App() {
   return (
     <BrowserRouter>
+      <WhatsAppButton />
+      <AIWidgetButton/>
+
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/shop" element={<ShopPage />} />

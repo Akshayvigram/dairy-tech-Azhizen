@@ -6,6 +6,10 @@ import { HeroSection } from "../screens/DesktopScreen/sections/HeroSection";
 import { ProductShowcaseSection } from "../screens/DesktopScreen/sections/ProductShowcaseSection/ProductShowcaseSection";
 import { ServiceCategorySection } from "../screens/DesktopScreen/sections/ServiceCategorySection/ServiceCategorySection";
 import { BadgeSection } from "./badge";
+import { Ourworksection } from "../screens/DesktopScreen/sections/Ourworksection/Ourworksection";
+import { FaqSection } from "../screens/DesktopScreen/sections/FaqSection/FaqSection";
+import { Navbar } from "../components/Navbar";
+import { WhatsAppButton } from "../components/WhatsAppButton";
 
 export const HomePage = (): JSX.Element => {
   const location = useLocation();
@@ -31,12 +35,17 @@ export const HomePage = (): JSX.Element => {
 
   return (
     <div className="bg-white overflow-hidden w-full flex flex-col min-h-screen">
+      <WhatsAppButton phoneNumber="919876543210" />
+      <Navbar/>
       <HeroSection />
       <BadgeSection  />
       <ServiceCategorySection />
+      <Ourworksection/>
       <ProductShowcaseSection />
+      <FaqSection/>
       <GallerySection />
       <FooterSection />
+
     </div>
   );
 };
