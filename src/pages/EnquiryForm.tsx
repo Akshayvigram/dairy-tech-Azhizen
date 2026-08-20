@@ -326,27 +326,108 @@
 
 // export default EnquiryForm;
 
-import { useState } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Navbar } from "../components/Navbar";
 import { FooterSection } from "../screens/DesktopScreen/sections/FooterSection";
-import { ChevronDown, MapPin } from "lucide-react";
+import { ChevronDown, MapPin, Check, ShoppingBag, Wrench } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { products } from "../lib/products";
 import { services } from "../lib/services";
 
-const EnquiryForm = () => {
+export const EnquiryForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const initialService = location.state?.service;
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // --- Multi-Selection State for Products & Services ---
+  const [selectedItems, setSelectedItems] = useState<any[]>(
+    initialService ? [initialService] : []
+  );
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const [form, setForm] = useState({
+    name: "",
+    phone1: "",
+    phone2: "",
+    location: "",
+    state: "",
+    city: "",
+    pincode: "",
+    message: "",
+  });
+
+  const [errors, setErrors] = useState<any>({});
+  const [showSelectionMenu, setShowSelectionMenu] = useState(false);
+
+  // Close dropdown automatically when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // --- Helper: Parse numeric prices (e.g., "₹12,499" -> 12499) ---
+  const parsePrice = (priceStr: string | number): number => {
+    if (typeof priceStr === "number") return priceStr;
+    if (!priceStr) return 0;
+    const numeric = priceStr.replace(/[^0-9.]/g, "");
+    return parseFloat(numeric) || 0;
+  };
+
+  // --- Calculate total price across all checked items ---
+  const totalPrice = useMemo(() => {
+    return selectedItems.reduce((acc, item) => acc + parsePrice(item.price), 0);
+  }, [selectedItems]);
+
+  // --- Format price back to currency string ---
+  const formattedTotalPrice = useMemo(() => {
+    return `₹${totalPrice.toLocaleString("en-IN")}`;
+  }, [totalPrice]);
+
+  // --- Toggle item selection ---
+  const handleItemToggle = (item: any, type: "product" | "service") => {
+    setSelectedItems((prev) => {
+      const exists = prev.some(
+        (i) => i.id === item.id && (('name' in i && type === 'product') || ('title' in i && type === 'service'))
+      );
+      if (exists) {
+        return prev.filter(
+          (i) => !(i.id === item.id && (('name' in i && type === 'product') || ('title' in i && type === 'service')))
+        );
+      } else {
+        return [...prev, item];
+      }
+    });
+
+    if (errors.selectedProduct) {
+      setErrors((prev: any) => ({ ...prev, selectedProduct: "" }));
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: "" });
+    }
+  };
+
   const handleEditItem = () => {
-    if (!selectedProduct) return;
-    // distinguish products vs services by their shape
-    if ('title' in selectedProduct) {
-      // it's a service object
-      navigate('/services', { state: { category: selectedProduct.category } });
+    if (selectedItems.length === 0) return;
+    const firstItem = selectedItems[0];
+    if ('title' in firstItem) {
+      navigate('/services', { state: { category: firstItem.category } });
     } else {
-      // product; return to shop
       navigate('/shop');
     }
   };
@@ -361,7 +442,7 @@ const EnquiryForm = () => {
     if (!form.city.trim()) validationErrors.city = "City is required";
     if (!form.pincode.trim()) validationErrors.pincode = "Pincode is required";
     if (!form.message.trim()) validationErrors.message = "Message is required";
-    if (!selectedProduct) validationErrors.selectedProduct = "Please select a product/service";
+    if (selectedItems.length === 0) validationErrors.selectedProduct = "Please select at least one product or service";
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -371,15 +452,15 @@ const EnquiryForm = () => {
     try {
       const enquiryData = {
         ...form,
-        selectedProduct: {
-          id: selectedProduct.id,
-          name: selectedProduct.name || selectedProduct.title,
-          category: selectedProduct.category,
-          price: selectedProduct.price,
-          description: selectedProduct.description,
-          subtitle: selectedProduct.subtitle,
-          title: selectedProduct.title
-        }
+        selectedProducts: selectedItems.map((item) => ({
+          id: item.id,
+          name: item.name || item.title,
+          type: 'name' in item ? 'product' : 'service',
+          category: item.category,
+          price: item.price,
+          description: item.description,
+        })),
+        totalPrice: formattedTotalPrice,
       };
 
       const response = await fetch('http://localhost:5000/api/enquiries/submit-enquiry', {
@@ -391,7 +472,6 @@ const EnquiryForm = () => {
       const result = await response.json();
       if (result.success) {
         alert("Enquiry Submitted Successfully!");
-        // Reset form
         setForm({
           name: "",
           phone1: "",
@@ -402,64 +482,13 @@ const EnquiryForm = () => {
           pincode: "",
           message: "",
         });
-        setSelectedProduct(null);
+        setSelectedItems([]);
       } else {
         alert("Error submitting enquiry: " + result.message);
       }
     } catch (err) {
       console.error("Connection failed", err);
       alert("Failed to submit enquiry. Please check your connection.");
-    }
-  };
-
-  const [form, setForm] = useState({
-    name: "",
-    phone1: "",
-    phone2: "",
-    location: "",
-    state: "",
-    city: "",
-    pincode: "",
-    message: "",
-  });
-
-  const [selectedProduct, setSelectedProduct] = useState<any>(initialService || null);
-  const [errors, setErrors] = useState<any>({});
-  const [showSelectionMenu, setShowSelectionMenu] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
-    }
-  };
-
-  const handleProductChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (!value) {
-      setSelectedProduct(null);
-      return;
-    }
-    
-    let selected = null;
-    
-    // Check if it's a product (prefix: product-X)
-    if (value.startsWith('product-')) {
-      const productId = parseInt(value.replace('product-', ''), 10);
-      selected = products.find(p => p.id === productId);
-    }
-    // Check if it's a service (prefix: service-X)
-    else if (value.startsWith('service-')) {
-      const serviceId = parseInt(value.replace('service-', ''), 10);
-      selected = services.find(s => s.id === serviceId);
-    }
-    
-    if (selected) {
-      setSelectedProduct(selected);
-      if (errors.selectedProduct) {
-        setErrors({ ...errors, selectedProduct: "" });
-      }
     }
   };
 
@@ -477,74 +506,131 @@ const EnquiryForm = () => {
     <div className="min-h-screen bg-white font-sans flex flex-col">
       <Navbar showOnlyNav />
 
-      <main className="flex-1 flex flex-col items-center px-4 py-8">
+<main className="flex-1 flex flex-col items-center px-4 pt-16 sm:pt-24 pb-12">
         <div className="w-full max-w-5xl">
 
-          {/* Top Support Banner - Moved outside the card */}
-          <div className="flex items-center mb-6 px-2 space-x-56">
-            <p className="text-sm font-medium justify-between pr text-gray-500">
-              If You Have Any Troubles Please Contact Ur Support
+          {/* Top Support Banner */}
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-6 px-2 gap-2">
+            <p className="text-sm font-medium text-gray-500">
+              If You Have Any Troubles Please Contact Our Support
             </p>
-            <p className="text-sm font-bold text-gray-500">987456321</p>
+            <p className="text-sm font-bold text-gray-700">987456321</p>
           </div>
 
           <div className="flex flex-col md:flex-row gap-8">
 
             {/* Left: Form Card */}
-            <div className="bg-white rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.05)] border border-gray-100 p-8 flex-1">
+            <div className="bg-white rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.05)] border border-gray-100 p-6 sm:p-8 flex-1">
               <h2 className="text-lg font-bold text-gray-800 mb-6">General Information</h2>
 
-              {/* Product/Service Selection */}
-              <div className="mb-5">
+              {/* DROPDOWN WITH CHECKBOXES FOR ALL SERVICES AND PRODUCTS */}
+              <div className="mb-6 relative" ref={dropdownRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Product/Service <span className="text-red-500">*</span>
+                  Select Services/Products <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <select
-                    value={
-                    selectedProduct?.id
-                      ? // products have a `name` field, services use `title` – use that to determine prefix
-                        `${'name' in selectedProduct ? 'product' : 'service'}-${selectedProduct.id}`
-                      : ""
-                  }
-                    onChange={handleProductChange}
-                    className={`w-full appearance-none border-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500 transition cursor-pointer ${errors.selectedProduct ? 'border-red-400' : 'border-gray-300'
-                      }`}
-                  >
-                    <option value="">-- Choose a Product or Service --</option>
-                    <optgroup label="Products">
-                      {Array.isArray(products) && products.length > 0 ? (
-                        products.map((product) => {
-                          if (!product?.id) return null;
-                          return (
-                            <option key={`product-${product.id}`} value={`product-${product.id}`}>
-                              {product.name} - {product.price}
-                            </option>
-                          );
-                        })
-                      ) : (
-                        <option disabled>No products available</option>
-                      )}
-                    </optgroup>
-                    <optgroup label="Services">
-                      {Array.isArray(services) && services.length > 0 ? (
-                        services.map((service) => {
-                          if (!service?.id) return null;
-                          return (
-                            <option key={`service-${service.id}`} value={`service-${service.id}`}>
-                              {service.title}
-                            </option>
-                          );
-                        })
-                      ) : (
-                        <option disabled>No services available</option>
-                      )}
-                    </optgroup>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none" />
+
+                {/* Dropdown Selector Header */}
+                <div
+                  onClick={() => setIsDropdownOpen((prev) => !prev)}
+                  className={`w-full border-2 rounded-lg px-4 py-3 text-sm font-medium bg-white flex items-center justify-between cursor-pointer transition select-none ${
+                    errors.selectedProduct ? 'border-red-400' : 'border-gray-300 hover:border-[#8dc63f]'
+                  }`}
+                >
+                  <span className={selectedItems.length > 0 ? "text-gray-900 font-semibold" : "text-gray-400"}>
+                    {selectedItems.length > 0
+                      ? `${selectedItems.length} item(s) selected (${formattedTotalPrice})`
+                      : "Select any services/products"}
+                  </span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </div>
+
+                {/* Dropdown Pop-down Menu */}
+                {isDropdownOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl p-4 z-50 max-h-[300px] overflow-y-auto space-y-4">
+
+                    {/* PRODUCTS SECTION */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2 pb-1 border-b border-gray-200">
+                        <ShoppingBag className="w-4 h-4 text-[#8dc63f]" />
+                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Products</span>
+                      </div>
+
+                      <div className="space-y-1 pl-1">
+                        {Array.isArray(products) && products.map((product) => {
+                          const isChecked = selectedItems.some((i) => i.id === product.id && 'name' in i);
+                          return (
+                            <label
+                              key={`prod-${product.id}`}
+                              className={`flex items-center justify-between p-2.5 rounded-lg border transition cursor-pointer select-none ${
+                                isChecked
+                                  ? "bg-lime-50/80 border-[#8dc63f] text-gray-900 font-medium"
+                                  : "bg-white border-gray-100 hover:bg-gray-50 text-gray-700"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => handleItemToggle(product, "product")}
+                                  className="w-4 h-4 accent-[#8dc63f] rounded cursor-pointer"
+                                />
+                                <span className="text-xs sm:text-sm">{product.name}</span>
+                              </div>
+                              <span className="text-xs font-bold text-gray-900">{product.price || "Contact"}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* SERVICES SECTION */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2 pb-1 border-b border-gray-200 pt-2">
+                        <Wrench className="w-4 h-4 text-[#8dc63f]" />
+                        <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Services</span>
+                      </div>
+
+                      <div className="space-y-1 pl-1">
+                        {Array.isArray(services) && services.map((service) => {
+                          const isChecked = selectedItems.some((i) => i.id === service.id && 'title' in i);
+                          return (
+                            <label
+                              key={`serv-${service.id}`}
+                              className={`flex items-center justify-between p-2.5 rounded-lg border transition cursor-pointer select-none ${
+                                isChecked
+                                  ? "bg-lime-50/80 border-[#8dc63f] text-gray-900 font-medium"
+                                  : "bg-white border-gray-100 hover:bg-gray-50 text-gray-700"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => handleItemToggle(service, "service")}
+                                  className="w-4 h-4 accent-[#8dc63f] rounded cursor-pointer"
+                                />
+                                <span className="text-xs sm:text-sm">{service.title}</span>
+                              </div>
+                              <span className="text-xs font-bold text-gray-900">{service.price || "On Request"}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
                 {errors.selectedProduct && <p className="text-red-500 text-xs mt-1">{errors.selectedProduct}</p>}
-                {selectedProduct && <p className="text-green-600 text-xs mt-1">✓ {selectedProduct.name || selectedProduct.title} selected</p>}
+                {selectedItems.length > 0 && (
+                  <p className="text-green-600 text-xs mt-1.5 font-medium flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" /> {selectedItems.length} item(s) selected
+                  </p>
+                )}
               </div>
 
               {/* Name */}
@@ -558,8 +644,9 @@ const EnquiryForm = () => {
                   value={form.name}
                   onChange={handleChange}
                   placeholder="Enter your full name"
-                  className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${
+                    errors.name ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                  }`}
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
@@ -576,8 +663,9 @@ const EnquiryForm = () => {
                     value={form.phone1}
                     onChange={handleChange}
                     placeholder="784512369"
-                    className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${errors.phone1 ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                      }`}
+                    className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${
+                      errors.phone1 ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                    }`}
                   />
                   {errors.phone1 && <p className="text-red-500 text-xs mt-1">{errors.phone1}</p>}
                 </div>
@@ -607,15 +695,16 @@ const EnquiryForm = () => {
                     value={form.location}
                     onChange={handleChange}
                     placeholder="Kalai Annai Nagar, sevagoundanur, bhavani"
-                    className={`w-full border rounded-md px-3 py-3 pl-10 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${errors.location ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                      }`}
+                    className={`w-full border rounded-md px-3 py-3 pl-10 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${
+                      errors.location ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                    }`}
                   />
                 </div>
                 {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
               </div>
 
               {/* State / City / Pincode */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     State <span className="text-red-500">*</span>
@@ -625,8 +714,9 @@ const EnquiryForm = () => {
                       name="state"
                       value={form.state}
                       onChange={handleChange}
-                      className={`w-full appearance-none border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition cursor-pointer ${errors.state ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                        }`}
+                      className={`w-full appearance-none border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition cursor-pointer ${
+                        errors.state ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                      }`}
                     >
                       <option value="">State</option>
                       <option value="Andhra Pradesh">Andhra Pradesh</option>
@@ -672,8 +762,9 @@ const EnquiryForm = () => {
                     value={form.city}
                     onChange={handleChange}
                     placeholder="City"
-                    className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${errors.city ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                      }`}
+                    className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${
+                      errors.city ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                    }`}
                   />
                   {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
                 </div>
@@ -688,8 +779,9 @@ const EnquiryForm = () => {
                     onChange={handleChange}
                     placeholder="Pincode"
                     maxLength={6}
-                    className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${errors.pincode ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                      }`}
+                    className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition ${
+                      errors.pincode ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                    }`}
                   />
                   {errors.pincode && <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>}
                 </div>
@@ -701,20 +793,21 @@ const EnquiryForm = () => {
                   Requirement Message <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  rows={6}
+                  rows={5}
                   name="message"
                   value={form.message}
                   onChange={handleChange}
                   placeholder="Example: I have 20 Cows, so provide me Quotation for the requirement, My Number 91234563201"
-                  className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition resize-none ${errors.message ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className={`w-full border rounded-md px-3 py-3 text-sm text-gray-800 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-lime-500 transition resize-none ${
+                    errors.message ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                  }`}
                 />
                 {errors.message && <p className="text-red-500 text-xs mt-1">{errors.message}</p>}
               </div>
 
               {/* Send Button */}
               <div className="flex justify-end">
-                <button onClick={handleSend} className="bg-[#a3cc00] hover:bg-[#8eb300] text-white font-bold px-12 py-3 rounded-md transition-colors shadow-md uppercase tracking-wider text-sm">
+                <button onClick={handleSend} className="bg-[#a3cc00] hover:bg-[#8eb300] text-white font-bold px-12 py-3 rounded-md transition-colors shadow-md uppercase tracking-wider text-sm cursor-pointer">
                   Send
                 </button>
               </div>
@@ -722,52 +815,56 @@ const EnquiryForm = () => {
 
             {/* Right: Order Summary Card */}
             <div className="w-full md:w-[320px] flex-shrink-0">
-              {/* REMOVED overflow-hidden from this div so the menu can pop out */}
               <div className="bg-white rounded-xl shadow-lg border border-gray-100 relative">
-                {selectedProduct ? (
+                {selectedItems.length > 0 ? (
                   <>
-                    {/* Added overflow-hidden only to the image container to keep rounded corners */}
-                    <div className="p-4 overflow-hidden ">
+                    <div className="p-4 overflow-hidden">
                       <img
-                        src={selectedProduct.image || "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000"}
-                        alt={selectedProduct.name || selectedProduct.title}
+                        src={selectedItems[0]?.image || "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000"}
+                        alt={selectedItems[0]?.name || selectedItems[0]?.title}
                         className={
-                          'name' in selectedProduct
-                            ? 'w-full h-36 object-contain rounded-lg'
+                          'name' in selectedItems[0]
+                            ? 'w-full h-36 object-contain rounded-lg bg-gray-50 p-2'
                             : 'w-full h-48 object-cover rounded-lg'
                         }
                       />
                     </div>
 
                     <div className="px-5 pb-6">
-                      <h3 className="font-bold text-gray-800 text-sm">{selectedProduct.name || selectedProduct.title}</h3>
-                      <p className="text-[10px] text-gray-500 mb-2">{selectedProduct.subtitle || selectedProduct.description}</p>
-                      <p className="text-sm font-black text-gray-800 mb-4">{selectedProduct.price}</p>
+                      <h3 className="font-bold text-gray-800 text-sm">
+                        {selectedItems.length === 1
+                          ? selectedItems[0].name || selectedItems[0].title
+                          : `${selectedItems.length} Items Selected`}
+                      </h3>
+                      <p className="text-[10px] text-gray-500 mb-2">
+                        {selectedItems.length === 1
+                          ? selectedItems[0].subtitle || selectedItems[0].description
+                          : selectedItems.map((i) => i.name || i.title).join(", ")}
+                      </p>
 
                       <div className="border-t border-dashed border-gray-300 my-4"></div>
 
-                      <div className="space-y-3 text-[11px] font-medium text-gray-500">
-                        <div className="flex justify-between">
-                          <span>Product</span>
-                          <span className="text-gray-700 text-right">{selectedProduct.name || selectedProduct.title}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Category</span>
-                          <span className="text-gray-700">{selectedProduct.category}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Price</span>
-                          <span className="text-gray-700">{selectedProduct.price}</span>
-                        </div>
-                        <div className="flex justify-between text-sm font-bold text-gray-900 pt-2">
-                          <span>Total</span>
-                          <span>{selectedProduct.price}</span>
-                        </div>
+                      {/* ITEM-BY-ITEM PRICE LIST */}
+                      <div className="space-y-2.5 text-[11px] font-medium text-gray-600 max-h-[180px] overflow-y-auto pr-1">
+                        {selectedItems.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-start gap-2">
+                            <span className="text-gray-800 truncate flex-1">{item.name || item.title}</span>
+                            <span className="text-gray-900 font-semibold">{item.price || "—"}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="border-t border-gray-200 my-4"></div>
+
+                      <div className="flex justify-between text-sm font-bold text-gray-900">
+                        <span>Calculated Total</span>
+                        <span className="text-[#8dc63f] text-base">{formattedTotalPrice}</span>
                       </div>
 
                       <button
                         onClick={handleEditItem}
-                        className="w-full mt-6 border-2 border-[#a3cc00] text-[#a3cc00] py-2 rounded-md font-bold hover:bg-lime-50 transition-colors cursor-pointer">
+                        className="w-full mt-6 border-2 border-[#a3cc00] text-[#a3cc00] py-2 rounded-md font-bold hover:bg-lime-50 transition-colors cursor-pointer text-xs"
+                      >
                         Change Item
                       </button>
                     </div>
@@ -783,8 +880,8 @@ const EnquiryForm = () => {
                     </div>
 
                     <div className="px-5 pb-6">
-                      <h3 className="font-bold text-gray-800 text-sm">No Product Selected</h3>
-                      <p className="text-[10px] text-gray-500 mb-2">Select a product or service from the dropdown on the left...</p>
+                      <h3 className="font-bold text-gray-800 text-sm">No Item Selected</h3>
+                      <p className="text-[10px] text-gray-500 mb-2">Select products or services using the dropdown on the left...</p>
 
                       <div className="border-t border-dashed border-gray-300 my-4"></div>
 
@@ -799,28 +896,27 @@ const EnquiryForm = () => {
                         <button
                           type="button"
                           onClick={() => setShowSelectionMenu(!showSelectionMenu)}
-                          className="w-full border-2 border-green-500 text-green-600 py-2 rounded-md font-bold bg-white hover:bg-green-50 transition-colors flex items-center justify-between px-4"
+                          className="w-full border-2 border-green-500 text-green-600 py-2 rounded-md font-bold bg-white hover:bg-green-50 transition-colors flex items-center justify-between px-4 text-xs"
                         >
-                          Select an Item
+                          Browse Options
                           <ChevronDown
-                            size={20}
+                            size={18}
                             className={`transition-transform ${showSelectionMenu ? "rotate-180" : ""}`}
                           />
                         </button>
                         {showSelectionMenu && (
-                          /* Change 'bottom-full mb-2' to 'top-full mt-2' */
                           <div className="absolute left-0 right-0 top-full mt-2 border border-gray-300 rounded-md bg-white shadow-xl z-[999]">
                             <button
                               type="button"
                               onClick={handleSelectFromShop}
-                              className="w-full text-left px-4 py-3 hover:bg-green-50 border-b border-gray-200 font-bold text-gray-700 text-sm"
+                              className="w-full text-left px-4 py-3 hover:bg-green-50 border-b border-gray-200 font-bold text-gray-700 text-xs"
                             >
                               Products
                             </button>
                             <button
                               type="button"
                               onClick={handleSelectFromServices}
-                              className="w-full text-left px-4 py-3 hover:bg-green-50 font-bold text-gray-700 text-sm"
+                              className="w-full text-left px-4 py-3 hover:bg-green-50 font-bold text-gray-700 text-xs"
                             >
                               Services
                             </button>

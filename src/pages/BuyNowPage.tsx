@@ -138,196 +138,506 @@
 // };
 
 // export default BuyNowPage;
-import { useState, useEffect } from "react";
+//
+
+import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { products, type Product } from "../lib/products";
 import { FooterSection } from "../screens/DesktopScreen/sections/FooterSection";
-import { HeroSection } from "../screens/DesktopScreen/sections/HeroSection";
 import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
 import { Navbar } from "../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const BuyNowPage = (): JSX.Element => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [searchParams]); // Re-run when product ID changes
 
   const productId = Number(searchParams.get("id"));
   const product = products.find((p) => p.id === productId) as Product | undefined;
 
-  const [qty, setQty] = useState(1);
-  const [activeThumb, setActiveThumb] = useState<string | null>(null);
-  const [tab, setTab] = useState<"features" | "specs" | "apps">("features");
+  // Track active thumbnail selection by array index
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const [tab, setTab] = useState<"features" | "specs" | "apps" | null>("features");
+
+  // Reset tab and active image whenever productId changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setTab("features");
+    setActiveIndex(0);
+  }, [productId]);
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <HeroSection showOnlyNav />
-        <div className="max-w-3xl mx-auto p-8 text-center">
-          <p className="mb-4">Product not found.</p>
-          <Button onClick={() => navigate("/shop")}>Back to shop</Button>
+      <div className="min-h-screen flex flex-col font-[Poppins]">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Product not found</h2>
+            <Button onClick={() => navigate("/shop")}>Back To Shop</Button>
+          </div>
         </div>
         <FooterSection />
       </div>
     );
   }
 
-  const thumbs = [product.image, "/motor-1.png", "/motor-1.png"];
+  // Gallery fallback
+  const thumbs =
+    (product as any).gallery && (product as any).gallery.length > 0
+      ? (product as any).gallery
+      : [
+          product.image || "https://via.placeholder.com/400",
+          product.image || "https://via.placeholder.com/400",
+          product.image || "https://via.placeholder.com/400",
+          product.image || "https://via.placeholder.com/400",
+        ];
 
   return (
-    <div className="bg-white w-full min-h-screen flex flex-col">
-      <Navbar showOnlyNav />
+    <div className="bg-white min-h-screen flex flex-col font-[Poppins] overflow-x-hidden">
+      {/* NAVBAR */}
+      <Navbar />
 
-      <main className="max-w-[1100px] mx-auto w-full px-6 py-10">
+      {/* MAIN CONTENT AREA */}
+      <main className="max-w-[1800px] mx-auto w-full px-4 sm:px-6 md:px-10 lg:px-12 pt-24 sm:pt-28 pb-6 md:pb-12 flex-1">
+
         {/* TOP PRODUCT SECTION */}
-        <div className="grid md:grid-cols-2 gap-12 items-start">
-          {/* LEFT IMAGE BLOCK */}
-          <div className="flex flex-col items-center">
-            <motion.img
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              key={activeThumb || product.image}
-              src={activeThumb || product.image}
-              alt={product.name}
-              className="w-[300px] h-[220px] object-contain mix-blend-multiply"
-            />
+        <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 sm:gap-8 lg:gap-10 py-2 sm:py-6 max-w-[1100px] mx-auto w-full">
 
-            <div className="flex gap-4 mt-8">
-              {/* {thumbs.map((t, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveThumb(t)}
-                  className={`w-20 h-16 border-2 rounded-xl flex items-center justify-center transition-all ${
-                    (activeThumb || product.image) === t ? "border-[#032a4a]" : "border-gray-100 hover:border-gray-300"
-                  }`}
-                >
-                  <img src={t} className="w-full h-full object-contain p-2 mix-blend-multiply" />
-                </button>
-              ))} */}
+          {/* LEFT: GALLERY AREA */}
+          <div className="flex flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto justify-center">
+
+            {/* 1. THUMBNAIL STACK CONTAINER */}
+            <div className="w-[98px] sm:w-[108px] h-[360px] sm:h-[420px] flex flex-col flex-shrink-0 rounded-[12px] overflow-hidden shadow-xs border-l-2 border-t-2 border-b-2 border-[#4A4A4A] relative">
+              {thumbs.slice(0, 4).map((imgUrl: string, i: number) => {
+                const isActive = activeIndex === i;
+
+                return (
+                  <div
+                    key={i}
+                    className={`
+                      relative
+                      flex-1
+                      w-full
+                      min-h-0
+                      overflow-hidden
+                      ${i !== thumbs.slice(0, 4).length - 1 ? "border-b-2 border-[#4A4A4A]" : ""}
+                    `}
+                  >
+                    {/* Right Gradient Border */}
+                    <div
+                      className="
+                        absolute
+                        top-0
+                        right-0
+                        w-[2px]
+                        h-full
+                        z-20
+                        pointer-events-none
+                        first:rounded-tr-[12px]
+                        last:rounded-br-[12px]
+                      "
+                      style={{
+                        background:
+                          "linear-gradient(to bottom, #1A1A1A 0%, #333333 10%, #B5B5B5 75%, #FFFFFF 100%)",
+                        borderTopRightRadius: i === 0 ? "12px" : "0",
+                        borderBottomRightRadius: i === 3 ? "12px" : "0",
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveIndex(i)}
+                      className={`
+                        w-full h-full
+                        flex items-center justify-center
+                        p-0
+                        transition-all duration-200
+                        cursor-pointer
+                        outline-none border-none
+                        ${isActive ? "bg-white" : "bg-[#E1F2B4] hover:opacity-90"}
+                      `}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt={`Thumbnail ${i + 1}`}
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
+
+            {/* 2. MAIN DISPLAY CARD WITH CURVED ARC */}
+            <div className="relative w-full max-w-[340px] h-[280px] sm:h-[335px] bg-white rounded-[12px] border-2 border-[#555555] p-4 sm:p-6 flex items-center justify-center shadow-xs">
+              <motion.img
+                key={activeIndex}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25 }}
+                src={thumbs[activeIndex] || product.image}
+                alt={product.name}
+                className="w-[85%] h-[85%] object-contain relative z-10"
+              />
+
+              {/* CURVED BOTTOM ACCENT LINE */}
+              <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 w-[85%] h-[45px] sm:h-[55px] pointer-events-none z-0">
+                <div className="w-full h-full border-b-[2px] border-[#d1d5db] rounded-b-[100%]" />
+                <div className="absolute left-1/2 bottom-[-5px] -translate-x-1/2 w-[16px] sm:w-[18px] h-[16px] sm:h-[18px] rounded-full bg-[#82b444] border-[3px] border-white shadow-xs" />
+              </div>
+            </div>
+
           </div>
 
-          {/* RIGHT PRODUCT INFO */}
-          <div>
-            <p className="text-xs font-bold text-[#032a4a] uppercase tracking-widest">{product.category}</p>
-            <h1 className="text-3xl font-bold mt-2 text-[#032a4a]">{product.name}</h1>
-            <p className="text-sm text-gray-500 mt-2">
-              {product.subtitle || "Belt Drive Model | 2 Bucket Capacity"}
-            </p>
-            <div className="text-3xl font-extrabold mt-6 text-[#032a4a]">{product.price}</div>
-            <p className="text-gray-600 mt-6 leading-relaxed text-sm max-w-[500px]">
-              {product.description}
-            </p>
+          {/* RIGHT: DETAILS & CTA */}
+          <div className="flex-1 w-full lg:max-w-[540px] flex flex-col justify-between self-stretch py-1 pl-0 lg:pl-2 text-left font-['Inter']">
+            <div>
+              {/* 1. CATEGORY BADGE WITH CHECKMARK */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#f0f9e8] text-[#6bb01a] rounded-full text-xs font-semibold mb-4 border border-[#e1f2cd]">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{product.category || "Motor"}</span>
+              </div>
 
-            <div className="flex items-center gap-4 mt-10">
+              {/* TITLE & SUBTITLE BLOCK */}
+              <div className="mb-4">
+                <h1 className="text-black font-bold text-[22px] sm:text-[26px] leading-[130%] capitalize">
+                  {product.name}
+                </h1>
+                <p className="text-gray-600 font-medium text-[14px] sm:text-[15px] leading-[130%] capitalize mt-1">
+                  {product.subtitle || "Belt Drive Model | 2 Bucket Capacity"}
+                </p>
+              </div>
+
+              {/* 2. PRICE PILL BADGE */}
+              <div className="inline-block bg-[#f0f9e8] px-4 py-2 rounded-xl border border-[#e1f2cd] my-3">
+                <span className="text-[#80cc00] font-extrabold text-[20px] sm:text-[22px]">
+                  {product.price || "₹7,000"}
+                </span>
+                <span className="text-black font-bold text-xs uppercase ml-1">
+                  + GST
+                </span>
+              </div>
+
+              {/* DESCRIPTION */}
+              <p className="text-[#333333] font-normal text-[14px] sm:text-[15px] leading-[150%] capitalize max-w-[520px] mt-2">
+                {product.description ||
+                  "Comes with a reliable pulsator system, durable liners, and 240 CC claw for smooth milking. Ideal for small to medium dairy farms, ensuring comfort for animals and better milk flow"}
+              </p>
+            </div>
+
+            {/* 3. CTA CARD CONTAINER (Exact ServiceView Spacing & Styling) */}
+            <div className="mt-8 bg-white border border-gray-200/80 shadow-[0_8px_20px_rgba(0,0,0,0.08)] rounded-[14px] p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-left">
+                {/* Headset Icon Circle */}
+                <div className="w-11 h-11 rounded-full bg-[#f0f9e8] border border-[#e1f2cd] flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-5 h-5 text-[#80cc00]"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 1a9 9 0 0 0-9 9v7c0 1.66 1.34 3 3 3h3a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H5v-2a7 7 0 0 1 14 0v2h-4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h3c1.66 0 3-1.34 3-3v-7a9 9 0 0 0-9-9z" />
+                  </svg>
+                </div>
+
+                <div className="flex flex-col">
+                  <h4 className="text-black font-bold text-[14px] sm:text-[15px] leading-tight tracking-tight">
+                    Share Your Requirements
+                  </h4>
+                  <p className="text-[#a0aab8] font-normal text-[12px] sm:text-[13px] leading-tight mt-1">
+                    And Get Expert Guidance Today.
+                  </p>
+                </div>
+              </div>
 
               <Button
-                onClick={() => navigate('/enquiry', { state: { service: product } })}
-                className="bg-[#8dc63f] hover:bg-[#043b66] text-white font-bold px-10 h-12 rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
+                onClick={() =>
+                  navigate("/enquiry", {
+                    state: { service: product },
+                  })
+                }
+                className="
+                  w-full sm:w-auto
+                  h-[42px]
+                  px-6
+                  text-[15px]
+                  rounded-[10px]
+                  bg-[#80cc00] hover:bg-[#72b800]
+                  text-white
+                  font-bold
+                  shadow-none
+                  transition-all
+                  cursor-pointer
+                  whitespace-nowrap
+                  flex items-center justify-center gap-2.5
+                "
               >
-                Let's Talk
+                <span>Let’s Talk</span>
+                <svg
+                  className="w-4 h-4 stroke-[2.5]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                  />
+                </svg>
               </Button>
             </div>
           </div>
+
         </div>
 
-        {/* TABS SECTION */}
-        <div className="mt-16">
-          <div className="flex gap-8 border-b border-gray-100">
-            {(["features", "specs", "apps"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`pb-4 text-sm font-bold transition-all relative ${
-                  tab === t ? "text-[#032a4a]" : "text-gray-400 hover:text-gray-600"
-                }`}
-              >
-                {t === "features" && "Key Features"}
-                {t === "specs" && "Specifications"}
-                {t === "apps" && "Applications"}
-                {tab === t && (
-                  <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#032a4a]" />
-                )}
-              </button>
-            ))}
+        {/* BOTTOM TABS SECTION */}
+        <div className="mt-8 sm:mt-12 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] border-none rounded-none sm:rounded-[16px] overflow-hidden font-['Poppins'] shadow-xs">
+
+          {/* 1. MOBILE VIEW (< lg): ACCORDION / FAQ STYLE */}
+          <div className="flex lg:hidden flex-col bg-[#EBFEDE] border-none">
+            {[
+              { id: "features", label: "Key Features Section" },
+              { id: "specs", label: "Specifications Section" },
+              { id: "apps", label: "Applications Section" },
+            ].map((item) => {
+              const isActive = tab === item.id;
+
+              const contentList =
+                item.id === "features"
+                  ? product.keyFeatures || [
+                      "Dual 25L Stainless Steel Buckets for increased volume.",
+                      "High Suction Capacity – 450 LPM.",
+                      "Belt Drive Motor for stable and quiet operation.",
+                      "Heavy-Duty Trolley with wheels for easy farm mobility.",
+                      "Oil-lubricated vacuum pump ensures smooth and low-noise performance.",
+                    ]
+                  : item.id === "specs"
+                  ? product.specifications || [
+                      "Bucket Capacity: 2 x 25 Liters (Stainless Steel 304).",
+                      "Pumping Capacity: 450 Liters Per Minute.",
+                      "Motor Rating: 1.0 HP / single-phase heavy-duty motor.",
+                      "Pulsator Type: Pneumatic 60/40 ratio pulsation.",
+                      "Operating Pressure: Standard 350-400 mmHg adjustable gauge.",
+                    ]
+                  : product.applications || [
+                      "Suitable for small to medium-scale dairy farms.",
+                      "Ideal for simultaneous milking of two cows or buffaloes.",
+                      "Portable setup for remote shed and pasture operations.",
+                      "Optimized for high-yield, hygienic raw milk collection.",
+                      "Reduces manual labor time and improves animal comfort.",
+                    ];
+
+              return (
+                <div key={item.id} className="border-b border-[#85e2fc]/60 last:border-b-0 w-full">
+                  {/* Accordion Title Button */}
+                  <button
+                    type="button"
+                    onClick={() => setTab(tab === item.id ? null : (item.id as any))}
+                    className={`
+                      w-full flex items-center justify-between
+                      py-3.5 px-5 text-left
+                      text-[15px] sm:text-[16px]
+                      transition-all cursor-pointer outline-none
+                      ${
+                        isActive
+                          ? "text-black font-bold bg-[#e1f9b3]"
+                          : "text-[#7a8c71] font-semibold bg-[#EBFEDE] hover:text-black"
+                      }
+                    `}
+                  >
+                    <span>{item.label}</span>
+                    <span className={`text-xs transition-transform duration-200 ${isActive ? "rotate-180" : ""}`}>
+                      ▼
+                    </span>
+                  </button>
+
+                  {/* Accordion Content */}
+                  {isActive && (
+                    <div className="py-4 px-5 bg-[#e1f9b3] border-t border-[#85e2fc]/40">
+                      <ul className="space-y-2.5 w-full pl-0 text-left flex flex-col">
+                        {contentList.map((contentItem: string, idx: number) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2.5 text-[13px] sm:text-[14px] font-medium text-black leading-snug"
+                          >
+                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-black flex-shrink-0" />
+                            <span>{contentItem}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
-          <div className="bg-gray-50/50 mt-6 p-8 rounded-2xl text-sm text-gray-600 leading-relaxed border border-gray-50">
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3 list-none">
-              {(tab === "features" ? product.keyFeatures : tab === "specs" ? product.specifications : product.applications)?.map((item, idx) => (
-                <li key={idx} className="flex items-center gap-3">
-                  <span className="w-1.5 h-1.5 bg-[#8dc63f] rounded-full" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+          {/* 2. DESKTOP VIEW (≥ lg): SIDE-BY-SIDE TABS */}
+          <div className="hidden lg:flex flex-row min-h-[180px] border border-[#85e2fc] rounded-[16px] overflow-hidden">
+            {/* LEFT COLUMN: TABS */}
+            <div className="w-[650px] bg-[#EBFEDE] border-r border-[#85e2fc] flex flex-col justify-stretch flex-shrink-0">
+              {[
+                { id: "features", label: "Key Features Section" },
+                { id: "specs", label: "Specifications Section" },
+                { id: "apps", label: "Applications Section" },
+              ].map((item) => {
+                const isActive = tab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setTab(item.id as any)}
+                    className={`
+                      w-full flex-1
+                      flex items-center justify-center
+                      py-4 px-8 text-center
+                      text-[18px] transition-all
+                      border-b border-[#85e2fc]/60
+                      last:border-b-0 cursor-pointer
+                      ${
+                        isActive
+                          ? "text-black font-bold bg-transparent"
+                          : "text-[#7a8c71] font-semibold hover:text-black bg-transparent"
+                      }
+                    `}
+                  >
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* RIGHT COLUMN: CONTENT PANE */}
+            <div className="flex-1 py-6 px-8 bg-[#e1f9b3] flex items-center justify-start">
+              <ul className="space-y-2 w-full max-w-[750px] pl-0 text-left flex flex-col justify-center">
+                {(
+                  tab === "features"
+                    ? product.keyFeatures || [
+                        "Dual 25L Stainless Steel Buckets for increased volume.",
+                        "High Suction Capacity – 450 LPM.",
+                        "Belt Drive Motor for stable and quiet operation.",
+                        "Heavy-Duty Trolley with wheels for easy farm mobility.",
+                        "Oil-lubricated vacuum pump ensures smooth and low-noise performance.",
+                      ]
+                    : tab === "specs"
+                    ? product.specifications || [
+                        "Bucket Capacity: 2 x 25 Liters (Stainless Steel 304).",
+                        "Pumping Capacity: 450 Liters Per Minute.",
+                        "Motor Rating: 1.0 HP / single-phase heavy-duty motor.",
+                        "Pulsator Type: Pneumatic 60/40 ratio pulsation.",
+                        "Operating Pressure: Standard 350-400 mmHg adjustable gauge.",
+                      ]
+                    : product.applications || [
+                        "Suitable for small to medium-scale dairy farms.",
+                        "Ideal for simultaneous milking of two cows or buffaloes.",
+                        "Portable setup for remote shed and pasture operations.",
+                        "Optimized for high-yield, hygienic raw milk collection.",
+                        "Reduces manual labor time and improves animal comfort.",
+                      ]
+                ).map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2.5 text-[15px] font-medium text-black leading-snug"
+                  >
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-black flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
 
-        {/* SIMILAR PRODUCTS - UPDATED DESIGN */}
-        <div className="mt-20">
-          <h3 className="text-xl font-bold text-[#032a4a] mb-8">View Similar Products</h3>
+        {/* VIEW SIMILAR PRODUCTS SECTION */}
+        <div className="mt-12 sm:mt-16 w-full max-w-[1150px] mx-auto px-4 sm:px-6">
+          <h2 className="text-[20px] sm:text-[22px] font-semibold text-black mb-6 text-left">
+            View Similar Products
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 w-full justify-items-center sm:justify-items-start">
             <AnimatePresence mode="popLayout">
               {products
                 .filter((p) => p.id !== product.id)
                 .slice(0, 4)
-                .map((p, index) => (
+                .map((item, index) => (
                   <motion.div
-                    key={p.id}
+                    key={item.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className="w-full max-w-[280px]"
                   >
-                    <Card className="group bg-white rounded-2xl overflow-hidden border-0 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_15px_35px_rgba(3,42,74,0.12)] transition-all duration-500 h-[24rem] w-[16rem] flex flex-col">
-                      <CardContent className="p-0 flex flex-col h-full">
-                        <div className="relative w-full h-48 bg-white overflow-hidden">
+                    {/* Card Frame */}
+                    <div className="bg-white rounded-[16px] p-3 border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:shadow-lg transition-all flex flex-col justify-between h-full">
+                      <div>
+                        {/* Grey Image Container */}
+                        <div className="h-[180px] bg-[#dce3e6] rounded-[12px] mb-3 overflow-hidden">
                           <img
-                            className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-110 mix-blend-multiply"
-                            alt={p.name}
-                            src={p.image}
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
                           />
-                          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#032a4a] uppercase tracking-wider shadow-sm">
-                            {p.category}
-                          </div>
                         </div>
 
-                        <div className="p-5 flex flex-col flex-grow">
-                          <h3 className="font-bold text-[#032a4a] text-base mb-1 line-clamp-1 group-hover:text-[#8dc63f] transition-colors">
-                            {p.name}
+                        {/* Content Area */}
+                        <div className="px-1 text-left">
+                          {/* Product Title */}
+                          <h3 className="text-[13px] font-extrabold text-black uppercase tracking-tight line-clamp-1 mb-1">
+                            {item.name}
                           </h3>
-                          <p className="text-gray-500 text-[11px] leading-relaxed mb-4 line-clamp-2">
-                            {p.description}
-                          </p>
 
-                          <div className="mt-auto pt-4 border-t border-gray-170 flex items-center justify-between">
-                            <div className="flex flex-col">
-                              <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tight">Price</span>
-                              <span className="font-extrabold text-[#032a4a] text-lg">{p.price}</span>
-                            </div>
-                            <Link to={`/buy?id=${p.id}`}>
-                              <Button className="bg-[#8dc63f]  hover:bg-[#043b66] text-white font-bold rounded-xl px-5 h-9 w-[100px] text-xs transition-all active:scale-95">
-                                View
-                              </Button>
-                            </Link>
-                          </div>
+                          {/* Product Description */}
+                          <p className="text-[11px] text-gray-500 font-medium leading-[1.35] line-clamp-4">
+                            {item.description ||
+                              "Comes With A Reliable Pulsator System, Durable Liners, And 240 CC Claw For Smooth Milking. Ideal For Small To Medium Dairy Farms, Ensuring Comfort For Animals And Better Milk Flow"}
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+
+                      {/* Card Footer */}
+                      <div className="px-1 pt-4 pb-1 flex items-center justify-between gap-2 mt-auto">
+                        {/* Price Display */}
+                        <div className="flex flex-col text-left leading-tight">
+                          <span className="font-extrabold text-[15px] text-black">
+                            {item.price || "₹7,000"}
+                          </span>
+                          {item.price?.toString().includes("+") ||
+                          item.price?.toString().includes("7000") ? (
+                            <span className="text-[9px] font-bold text-gray-700 uppercase mt-0.5">
+                              +GST
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* Bright Green View Button */}
+                        <Button
+                          onClick={() => {
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                            navigate(`/buy?id=${item.id}`);
+                          }}
+                          className="h-[34px] px-7 bg-[#8cc600] hover:bg-[#7bb000] text-white text-[13px] font-bold rounded-[6px] transition-colors cursor-pointer shadow-none"
+                        >
+                          View
+                        </Button>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
             </AnimatePresence>
           </div>
         </div>
+
       </main>
 
+      {/* FOOTER */}
       <FooterSection />
     </div>
   );

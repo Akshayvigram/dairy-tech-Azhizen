@@ -1,136 +1,294 @@
-
-
 import { Navbar } from "../../../../components/Navbar";
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 
 interface HeroSectionProps {
   showOnlyNav?: boolean;
 }
 
-export const HeroSection = ({  }: HeroSectionProps): JSX.Element => {
+// =========================================================
+// CANVA-STYLE LEFT-TO-RIGHT BLOCK SLIDE REVEAL VARIANTS
+// =========================================================
+const blockContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.18,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const blockItemLeftToRightVariants = {
+  hidden: {
+    x: "-100%",
+    opacity: 0,
+    filter: "blur(6px)",
+  },
+  visible: {
+    x: "0%",
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.85,
+      ease: [0.16, 1, 0.3, 1], // Smooth Canva cubic-bezier slide curve
+    },
+  },
+};
+
+export const HeroSection = ({}: HeroSectionProps): JSX.Element => {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  
   const phoneNumber = "+919750603988";
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.defaultMuted = true;
       videoRef.current.muted = true;
+
       const playVideo = () => {
         videoRef.current?.play().catch((error) => {
           console.warn("Autoplay prevented:", error);
         });
       };
+
       playVideo();
       document.addEventListener("click", playVideo, { once: true });
-      return () => document.removeEventListener("click", playVideo);
+
+      return () =>
+        document.removeEventListener("click", playVideo);
     }
   }, []);
 
   return (
     <>
-      <style>
-        {`
-          @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
-          }
-          .animate-float {
-            animation: float 4s ease-in-out infinite;
-          }
-
-          .green-half-circle {
-            position: absolute;
-            bottom: -1%;
-            right: 0;
-            width: 25%;
-            height: 100%;
-            background: linear-gradient(to bottom right, #84cc16 0%, #a3e635 100%);
-            opacity: 0.25;
-            border-radius: 591.69px 0 0 591.69px;
-            z-index: 0;
-            filter: blur(35.5px);
-          }
-
-          /* Pulse animation for the dialer button */
-          @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(132, 204, 22, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(132, 204, 22, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(132, 204, 22, 0); }
-          }
-          .animate-pulse-slow {
-            animation: pulse-green 2s infinite;
-          }
-
-          @media (max-width: 640px) {
-            .green-half-circle { display: none; }
-          }
-        `}
-      </style>
-
-      {/* Floating Dialer Button */}
-      <a
-        href={`tel:${phoneNumber}`}
-        className="fixed bottom-20 right-24 z-[100] bg-lime-600 text-white p-4 rounded-full shadow-2xl hover:bg-lime-700 transition-all active:scale-95 animate-pulse-slow flex items-center justify-center"
-        aria-label="Call Us"
-      >
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="28" 
-          height="28" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2.5" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        >
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-        </svg>
-      </a>
-
       {isHome ? (
-        <div className="bg-white py-3 w-full min-h-screen flex flex-col relative overflow-hidden">
+        <section
+          className="
+            relative
+            w-full
+            min-h-screen
+            md:min-h-[100svh]
+            overflow-hidden
+            bg-black
+          "
+        >
+          {/* ================= Background Video ================= */}
+
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="
+              absolute
+              inset-0
+              w-full
+              h-full
+              object-cover
+              object-center
+              select-none
+              pointer-events-none
+            "
+          >
+            <source
+              src="/hero-video.mp4"
+              type="video/mp4"
+            />
+          </video>
+
+          {/* ================= Overlay ================= */}
+
+          <div
+            className="
+              absolute
+              inset-0
+              bg-gradient-to-b
+              from-black/55
+              via-black/25
+              to-black/55
+            "
+          />
+
+          {/* ================= Navbar ================= */}
+
           <Navbar />
-          <div className="green-half-circle" />
 
-          <div className="flex flex-col-reverse md:flex-row h-[calc(100vh-80px)] w-full items-center px-6 md:px-12 lg:px-24 relative z-10">
-            <div className="w-full md:w-1/2 flex flex-col justify-center items-start">
-              <h1 className="text-2xl md:text-3xl lg:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
-                Transforming Your Land Into A <span className="text-lime-600">Fully Automated, Technology-Driven Dairy Farm Ecosystem.</span>
-              </h1>
-              <p className="text-base md:text-lg text-gray-600 leading-relaxed mb-6">
-                Azhizen Dairy Tech Solution Design And Implement Smart Dairy Infrastructure Equipped With Automation, Real-Time Monitoring, And Data-Driven Management Systems.
-              </p>
-              
-              {/* Optional: Inline Call Button */}
-              {/* <a 
-                href={`tel:${phoneNumber}`} 
-                className="bg-gray-900 text-white px-8 py-3 rounded-lg font-bold hover:bg-lime-600 transition-colors flex items-center gap-2"
+          {/* ================= Hero Container ================= */}
+          <div
+            className="
+              relative
+              z-20
+              h-[calc(100vh-90px)]
+              w-full
+              px-6
+              sm:px-12
+              md:px-16
+              lg:px-24
+            "
+          >
+            <div
+              className="
+                flex
+                flex-col
+                justify-end
+                items-start
+                h-full
+                pb-2
+                sm:pb-4
+                md:pb-6
+                lg:pb-8
+              "
+            >
+              <motion.div
+                variants={blockContainerVariants}
+                initial="hidden"
+                animate="visible"
+                className="
+                  w-full
+                  max-w-[1100px]
+                  text-left
+                "
               >
-                Connect Now
-              </a> */}
-            </div>
+                {/* CANVA BLOCK REVEAL (LEFT TO RIGHT): Heading Line 1 */}
+                <div className="overflow-hidden pb-1">
+                  <motion.h1
+                    variants={blockItemLeftToRightVariants}
+                    className="
+                      font-[Poppins]
+                      font-normal
+                      text-white
+                      text-[1.5rem]
+                      sm:text-[2rem]
+                      md:text-[2.5rem]
+                      lg:text-[2.8rem]
+                      xl:text-[3.1rem]
+                      leading-tight
+                      tracking-wide
+                      max-w-none
+                    "
+                  >
+                    Bringing Innovation to
+                  </motion.h1>
+                </div>
 
-            <div className="w-full md:w-1/2 flex justify-center items-center">
-              <div className="animate-float">
-                <img 
-                  src="/ariz.png" 
-                  alt="Farm Bot" 
-                  className="max-h-[50vh] md:max-h-[70vh] w-auto object-contain drop-shadow-2xl"
-                />
-              </div>
+                {/* CANVA BLOCK REVEAL (LEFT TO RIGHT): Heading Line 2 */}
+                <div className="overflow-hidden mb-3 pb-1">
+                  <motion.h1
+                    variants={blockItemLeftToRightVariants}
+                    className="
+                      font-[Poppins]
+                      font-normal
+                      text-white
+                      text-[1.5rem]
+                      sm:text-[2rem]
+                      md:text-[2.5rem]
+                      lg:text-[2.8rem]
+                      xl:text-[3.1rem]
+                      leading-tight
+                      tracking-wide
+                      max-w-none
+                    "
+                  >
+                    <span>
+                      your Diary Tech Farming
+                      <br className="sm:hidden" /> Journey
+                    </span>
+                  </motion.h1>
+                </div>
+
+                {/* CANVA BLOCK REVEAL (LEFT TO RIGHT): Description Paragraph */}
+                <div className="overflow-hidden mb-6">
+                  <motion.p
+                    variants={blockItemLeftToRightVariants}
+                    className="
+                      text-white/95
+                      text-xs
+                      sm:text-sm
+                      md:text-base
+                      lg:text-[17px]
+                      leading-relaxed
+                      max-w-[800px]
+                      font-[Poppins]
+                      font-light
+                    "
+                  >
+                    we convert your land into complete dairy tech automation farm House
+                    help you to monitor and maintain the farm house
+                  </motion.p>
+                </div>
+
+                {/* CANVA BLOCK REVEAL (LEFT TO RIGHT): CTA Button */}
+              {/* CANVA BLOCK REVEAL (LEFT TO RIGHT): CTA Button */}
+<div className="overflow-hidden pt-1 pb-1">
+  <motion.div variants={blockItemLeftToRightVariants}>
+    <button
+      type="button"
+      onClick={() => {
+        const nextSection = document.getElementById("about");
+        if (nextSection) {
+          nextSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }}
+      className="
+        inline-flex
+        items-center
+        gap-3
+        rounded-full
+        bg-[#B6E51E]
+        hover:bg-[#A7D91A]
+        transition-all
+        duration-300
+        pl-5
+        pr-1.5
+        py-1.5
+        shadow-xl
+        group
+        active:scale-95
+        cursor-pointer
+      "
+    >
+      <span className="font-[Poppins] font-medium text-[15px] text-black">
+        Start now
+      </span>
+      <span className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center text-xs transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+        ➔
+      </span>
+    </button>
+  </motion.div>
+</div>
+              </motion.div>
             </div>
           </div>
-        </div>
+
+          {/* Decorative Blur */}
+          <div
+            className="
+              absolute
+              bottom-[-120px]
+              right-[-120px]
+              hidden
+              lg:block
+              w-[420px]
+              h-[420px]
+              rounded-full
+              bg-[#B6E51E]/10
+              blur-[140px]
+              pointer-events-none
+            "
+          />
+
+        </section>
       ) : (
         <Navbar />
       )}
     </>
   );
 };
+
+export default HeroSection;

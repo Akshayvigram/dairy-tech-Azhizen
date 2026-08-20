@@ -1,22 +1,22 @@
 // export const GallerySection = (): JSX.Element => {
   // const projects = [
-  //   { 
-  //     src: "/image-184.png", 
+  //   {
+  //     src: "/image-184.png",
   //     alt: "Dairy Farm Setup",
   //     title: "Dairy Farm Setup",
   //   },
-  //   { 
-  //     src: "/image-178.png", 
+  //   {
+  //     src: "/image-178.png",
   //     alt: "Maintaining Farm House",
   //     title: "Maintaining Farm House",
   //   },
-  //   { 
-  //     src: "/image-182.png", 
+  //   {
+  //     src: "/image-182.png",
   //     alt: "Fodder Management System",
   //     title: "Fodder Management System",
   //   },
-  //   { 
-  //     src: "/image-183.png", 
+  //   {
+  //     src: "/image-183.png",
   //     alt: "Cleaning Farm House",
   //     title: "Cleaning Farm House",
   //   },
@@ -31,7 +31,7 @@
 //             Recently Completed
 //           </span> */}
 //           <h2 className="font-sans font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl mb-6 leading-tight">
-//             Recently Completed 
+//             Recently Completed
 //           </h2>
 //           <p className="text-gray-500 text-sm sm:text-base md:text-lg max-w-3xl leading-relaxed">
 //             Affordable rental of well-maintained farming equipment to support your agricultural needs. Innovative irrigation solutions to ensure efficient water use and healthy crops.
@@ -43,9 +43,9 @@
 //           {projects.map((project, index) => (
 //             <div key={index} className="group cursor-pointer">
 //               <div className="relative h-35 sm:h-96 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-gray-200">
-//                 <img 
-//                   src={project.src} 
-//                   alt={project.alt} 
+//                 <img
+//                   src={project.src}
+//                   alt={project.alt}
 //                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
 //                 />
 //                 {/* Dark Overlay Gradient */}
@@ -73,42 +73,42 @@
 //   );
 // };
 
-export const GallerySection = (): JSX.Element => {
+/*export const GallerySection = (): JSX.Element => {
   const projects = [
-    { 
-      src: "/image-184.png", 
+    {
+      src: "/image-184.png",
       alt: "Dairy Farm Setup",
       title: "Dairy Farm Setup",
     },
-    { 
-      src: "/image-178.png", 
+    {
+      src: "/image-178.png",
       alt: "Maintaining Farm House",
       title: "Maintaining Farm House",
     },
-    { 
-      src: "/image-182.png", 
+    {
+      src: "/image-182.png",
       alt: "Fodder Management System",
       title: "Fodder Management System",
     },
-    { 
-      src: "/image-183.png", 
+    {
+      src: "/image-183.png",
       alt: "Cleaning Farm House",
       title: "Cleaning Farm House",
     },
   ];
-
-  return (
+*/
+  /*return (
     <section className=" bg-white py-16 sm:py-20 md:py-24 relative overflow-hidden">
-      {/* Side Yellow Background Box */}
-      {/* This box starts from the left and covers roughly 80% of the bottom half */}
-      <div 
-        className="absolute bottom-0 left-0 w-[85%] h-[50%] bg-[#F7F1D7] -z-10 rounded-tr-[40px]" 
+      { Side Yellow Background Box }
+      { This box starts from the left and covers roughly 80% of the bottom half }
+      <div
+        className="absolute bottom-0 left-0 w-[85%] h-[50%] bg-[#F7F1D7] -z-10 rounded-tr-[40px]"
         aria-hidden="true"
       />
-       
-       
+
+
       <div className="max-w-[1305px]  mx-auto  relative z-10">
-        {/* Header Section */}
+        {/* Header Section }
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
           <div className="max-w-xl ">
             <div className="h-9  w-1  bg-[#8dc63f] rounded-full" />
@@ -139,27 +139,27 @@ export const GallerySection = (): JSX.Element => {
             <span className="inline-block mt-4 border border-green-600/30 text-green-700 px-4 py-1.5 rounded-full text-xs font-medium mb-4">
               Recently Completed
             </span>
-          
-          
+
+
           <div className="md:max-w-sm">
             <p className="text-gray-500 text-sm sm:text-base leading-relaxed">
               Affordable rental of well-maintained farming equipment to support your agricultural needs. Innovative irrigation solutions to ensure efficient water use and healthy crops.
             </p>
           </div>
           </div>
-        </div> */}
+        </div> }
 
-        {/* Projects Grid */}
+        {/* Projects Grid }
         <div className="grid grid-cols-1 px-6 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
           {projects.map((project, index) => (
             <div key={index} className="group">
               <div className="relative h-[400px] sm:h-[450px] rounded-xl overflow-hidden shadow-md bg-gray-200">
-                <img 
-                  src={project.src} 
-                  alt={project.alt} 
+                <img
+                  src={project.src}
+                  alt={project.alt}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                {/* Overlay with Text at the bottom */}
+                {/* Overlay with Text at the bottom }
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
                   <h3 className="text-white font-sans font-bold text-xl leading-tight">
                     {project.title}
@@ -168,9 +168,9 @@ export const GallerySection = (): JSX.Element => {
               </div>
             </div>
           ))}
-        </div>
+        </div>*/
 
-        {/* Navigation Buttons */}
+        /* Navigation Buttons
         {/* <div className="flex items-center gap-4">
           <button className="w-12 h-12 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:bg-white transition-all shadow-sm">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -182,7 +182,127 @@ export const GallerySection = (): JSX.Element => {
               <path d="M9 18l6-6-6-6" />
             </svg>
           </button>
-        </div> */}
+        </div> }
+      </div>
+    </section>
+  );
+};
+*/
+
+import { motion } from "framer-motion";
+
+export const GallerySection = (): JSX.Element => {
+  const projects = [
+    {
+      src: "/image-184.png",
+      alt: "Dairy Farm Setup",
+      title: "Dairy Farm Setup",
+    },
+    {
+      src: "/image-178.png",
+      alt: "Maintaining Farm House",
+      title: "Maintaining Farm House",
+    },
+    {
+      src: "/image-182.png",
+      alt: "Fodder Management System",
+      title: "Fodder Management System",
+    },
+    {
+      src: "/image-183.png",
+      alt: "Cleaning Farm House",
+      title: "Cleaning Farm House",
+    },
+    {
+      src: "/2bucketmilkingmachine.png",
+      alt: "Milking Equipment",
+      title: "Milking Equipment",
+    },
+  ];
+
+  return (
+    <section id="gallery" className="bg-white py-10 sm:py-14 md:py-16 lg:py-20 w-full overflow-hidden">
+      <div className="max-w-[1440px] mx-auto px-16 md:px-22">
+
+        {/* Gallery Main Section Header */}
+        <div className="mb-6 md:mb-8">
+          <h2 className="font-[Poppins] font-bold text-black text-2xl sm:text-3xl md:text-4xl tracking-tight">
+            Gallery
+          </h2>
+        </div>
+
+        {/* ================= ASYMMETRIC JIGSAW GRID LAYOUT ================= */}
+        {/* - Mobile/Base: 1 column vertical stack
+          - Tablets (md): 2-column balanced grid
+          - Desktop (lg): 3-column asymmetric layout with row-spanning
+        */}
+        {/* Gallery Layout */}
+        {/* 🛠️ REPLACE FROM THIS LINE DOWN TO THE BOTTOM DESCRIPTION LABEL */}
+        {/* ================= ASYMMETRIC JIGSAW GRID LAYOUT ================= */}
+{/* ================= ASYMMETRIC JIGSAW GRID LAYOUT ================= */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-stretch w-full">
+
+  {/* COLUMN 1: TALL PORTRAIT BLOCK (Left Dominant Box) */}
+  <div className="lg:col-span-4 lg:row-span-2 h-[320px] sm:h-[450px] lg:h-[516px] rounded-[14px] overflow-hidden group shadow-[0px_4px_15px_rgba(0,0,0,0.03)] border border-gray-100">
+    <img
+      src={projects[0].src}
+      alt={projects[0].alt}
+      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
+    />
+  </div>
+
+  {/* ================= TOP ROW CARDS (Standard Equal Width) ================= */}
+  {/* 📍 COLUMN 2: MIDDLE TOP CARD */}
+  <div className="lg:col-span-4 h-[180px] sm:h-[240px] lg:h-[250px] rounded-[14px] overflow-hidden group shadow-[0px_4px_15px_rgba(0,0,0,0.03)] border border-gray-100">
+    <img
+      src={projects[1].src}
+      alt={projects[1].alt}
+      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
+    />
+  </div>
+
+  {/* 📍 COLUMN 3: RIGHT TOP CARD */}
+  <div className="lg:col-span-4 h-[180px] sm:h-[240px] lg:h-[250px] rounded-[14px] overflow-hidden group shadow-[0px_4px_15px_rgba(0,0,0,0.03)] border border-gray-100">
+    <img
+      src={projects[2].src}
+      alt={projects[2].alt}
+      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
+    />
+  </div>
+
+  {/* ================= BOTTOM ROW CARDS (Asymmetric Split) ================= */}
+  {/* 🛠️ Only the bottom row scales asymmetrically: Middle is wider, Right is narrower */}
+  <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.4fr_0.6fr] gap-4 w-full h-full">
+
+    {/* COLUMN 2: MIDDLE BOTTOM CARD (Width Increased!) */}
+    <div className="h-[180px] sm:h-[240px] lg:h-[250px] w-full rounded-[14px] overflow-hidden group shadow-[0px_4px_15px_rgba(0,0,0,0.03)] border border-gray-100">
+      <img
+        src={projects[3].src}
+        alt={projects[3].alt}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
+      />
+    </div>
+
+    {/* COLUMN 3: RIGHT BOTTOM CARD (Width Decreased) */}
+    <div className="h-[180px] sm:h-[240px] lg:h-[250px] w-full rounded-[14px] overflow-hidden group shadow-[0px_4px_15px_rgba(0,0,0,0.03)] border border-gray-100">
+      <img
+        src={projects[4].src}
+        alt={projects[4].alt}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
+      />
+    </div>
+
+  </div>
+
+</div>
+        {/* 🛠️ END OF LAYOUT REPLACEMENT BLOCK */}
+
+        {/* ================= BOTTOM DESCRIPTION LABEL ================= */}
+        <div className="max-w-[1000px] mx-auto text-center mt-12 md:mt-16 px-4">
+          <p className="text-[#888888] font-sans font-normal tracking-wide leading-relaxed text-xs md:text-[13px] lg:text-[14px] max-w-[850px] mx-auto">
+            The system operates efficiently with controlled suction and pulsation to maintain comfort and milk quality, automatically stopping once milking is complete to prevent over-milking.          </p>
+        </div>
+
       </div>
     </section>
   );
