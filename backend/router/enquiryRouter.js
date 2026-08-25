@@ -58,31 +58,24 @@
 // export default router;
 
 
-
 import express from 'express';
 import { db, collection, addDoc, serverTimestamp } from '../firebaseAdmin.js';
 import { sendSlackMessage, formatEnquiryMessage, formatContactMessage } from '../utils/slackNotifier.js';
 
 const router = express.Router();
 
-// PASTE YOUR 2 COPIED SLACK URLS HERE:
-const SLACK_ENQUIRY_WEBHOOK_URL = process.env.SLACK_ENQUIRY_WEBHOOK_URL;
-const SLACK_CONTACT_WEBHOOK_URL = process.env.SLACK_CONTACT_WEBHOOK_URL;
-
 // 1. Enquiry Page Route -> Sends to Enquiries channel
 router.post('/submit-enquiry', async (req, res) => {
   try {
     const enquiryData = req.body;
 
-    // Save to Firestore
     const docRef = await addDoc(collection(db, 'enquiries'), {
       ...enquiryData,
       createdAt: serverTimestamp(),
     });
 
-    // Send Slack alert
     const slackPayload = formatEnquiryMessage(enquiryData);
-    await sendSlackMessage(slackPayload, SLACK_ENQUIRY_WEBHOOK_URL);
+    await sendSlackMessage(slackPayload, process.env.SLACK_ENQUIRY_WEBHOOK_URL);
 
     return res.status(200).json({
       success: true,
@@ -100,15 +93,13 @@ router.post('/submit-contact', async (req, res) => {
   try {
     const contactData = req.body;
 
-    // Save to Firestore
     const docRef = await addDoc(collection(db, 'contacts'), {
       ...contactData,
       createdAt: serverTimestamp(),
     });
 
-    // Send Slack alert
     const slackPayload = formatContactMessage(contactData);
-    await sendSlackMessage(slackPayload, SLACK_CONTACT_WEBHOOK_URL);
+    await sendSlackMessage(slackPayload, process.env.SLACK_CONTACT_WEBHOOK_URL);
 
     return res.status(200).json({
       success: true,
